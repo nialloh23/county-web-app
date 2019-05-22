@@ -2,8 +2,6 @@ import os
 from flask import Flask, render_template, request, redirect, url_for
 from werkzeug import secure_filename
 from flask import send_from_directory
-import boto3
-import conf.credentials as conf
 import json
 import requests
 import cv2
