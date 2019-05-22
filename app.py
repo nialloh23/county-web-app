@@ -1,9 +1,25 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for
 from werkzeug import secure_filename
+from flask import send_from_directory
+import boto3
+import conf.credentials as conf
+import json
+import requests
+import cv2
+from PIL import Image
+import sys
+import base64
+
 
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = set(['jpg', 'jpeg'])
+
+#create lambda client
+client = boto3.client('lambda',
+                        region_name= conf.region_name,
+                        aws_access_key_id=conf.aws_access_key_id,
+                        aws_secret_access_key=conf.aws_secret_access_key)
 
 
 app = Flask(__name__)
@@ -33,6 +49,42 @@ def upload_file():
 
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(file_path)
+
+            address='https://rhnuvxmfmk.execute-api.us-west-2.amazonaws.com/dev'
+            url = address + '/v1/predict'
+            content_type = 'application/json'
+            headers = {'Content-Type': content_type}
+
+            image = open(file_path, "rb")
+            image_read = image.read()  #open binary file in read mode
+            image_64_encode = base64.b64encode(image_read) #encode the string in base64-encoded data
+
+            payload= {"image": "data:image/jpg;base64,{}".format(image_64_encode)}
+
+            #img = open('uploads/13.jpg', 'rb').read()
+            #img = cv2.imread('uploads/13.jpg')
+            #encode image as jpeg
+            #_, img_encoded = cv2.imencode('.jpg', img)
+            # send http request with image and receive response
+
+            response = requests.post(url, headers=headers, data=json.dumps(payload) )
+
+            json_response = response.json()
+
+            # decode response
+            #print (json.loads(response.text))
+
+
+            #payload = {"image": "data:image/jpg;base64,'$(base64 -w0 -i uploads/31.jpg)'"}
+            #result = client.invoke(FunctionName=conf.lambda_function_name,
+            #                    InvocationType='RequestResponse',
+            #                    LogType='Tail',
+            #                    Payload=json.dumps(payload))
+            #print('result:{}'.format(result))
+            #range = result['Payload'].read()
+            #print('range:{}'.format(range))
+            #api_response = json.loads(range)
+            #print('api_response:{}'.format(api_response))
         #    result = predict(file_path)
         #    if result == 0:
         #        label = 'Daisy'
@@ -44,11 +96,17 @@ def upload_file():
         #    print(file_path)
         #    filename = my_random_string(6) + filename
 
-            os.rename(file_path, os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            #os.rename(file_path, os.path.join(app.config['UPLOAD_FOLDER'], filename))
             print("--- %s seconds ---" % str (time.time() - start_time))
-            return render_template('template.html', label='', imagesource='../uploads/' + filename)
+            return render_template('template.html', label=json_response, imagesource='../uploads/' + filename)
 
+
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'],
+                               filename)
 
 
 if __name__ == '__main__':
+    app.debug=True
     app.run()
