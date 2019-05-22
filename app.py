@@ -8,6 +8,7 @@ import cv2
 from PIL import Image
 import sys
 import base64
+import boto3
 
 
 UPLOAD_FOLDER = 'uploads'
@@ -17,6 +18,9 @@ ALLOWED_EXTENSIONS = set(['jpg', 'jpeg'])
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Create an S3 client
+s3 = boto3.client('s3')
 
 
 def allowed_file(filename):
@@ -39,6 +43,8 @@ def upload_file():
 
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
+            s3_bucket_name = 'countyclassifier'
+            s3.upload_file(filename, s3_bucket_name, filename)
 
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(file_path)
