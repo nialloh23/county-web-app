@@ -15,11 +15,6 @@ import base64
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = set(['jpg', 'jpeg'])
 
-#create lambda client
-client = boto3.client('lambda',
-                        region_name= conf.region_name,
-                        aws_access_key_id=conf.aws_access_key_id,
-                        aws_secret_access_key=conf.aws_secret_access_key)
 
 
 app = Flask(__name__)
