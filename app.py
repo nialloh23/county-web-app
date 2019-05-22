@@ -4,7 +4,7 @@ from werkzeug import secure_filename
 from flask import send_from_directory
 import json
 import requests
-import cv2
+#import cv2
 from PIL import Image
 import sys
 import base64
