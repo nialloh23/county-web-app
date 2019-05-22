@@ -43,8 +43,8 @@ def upload_file():
 
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            s3_bucket_name = 'countyclassifier'
-            s3.upload_file(filename, s3_bucket_name, filename)
+            #s3_bucket_name = 'countyclassifier'
+            #s3.upload_file(filename, s3_bucket_name, filename)
 
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(file_path)
